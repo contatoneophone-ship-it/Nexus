@@ -1,0 +1,8 @@
+{
+  "name": "Nexus Overtime Manager",
+  "description": "A premium corporate dashboard for managing driver overtime, featuring AI analytics, advanced visualization, and automated KPIs.",
+  "requestFramePermissions": [
+    "microphone",
+    "geolocation"
+  ]
+}
