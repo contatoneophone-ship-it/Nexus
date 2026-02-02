@@ -4,8 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nexus Overtime Manager</title>
-    <!-- Keeping Tailwind CDN for styling consistency with your code, 
-         though in a full production app you might move this to package.json -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,10 +21,10 @@
               background: '#0F1220',
               surface: '#1A1F36',
               surfaceHighlight: '#232946',
-              primary: '#4DA3FF', // HE 50% Blue
-              secondary: '#9B7CFF', // HE 100% Purple
-              accent: '#4DFFB2', // Night Green
-              danger: '#FF6B6B', // Cost Red
+              primary: '#4DA3FF',
+              secondary: '#9B7CFF',
+              accent: '#4DFFB2',
+              danger: '#FF6B6B',
               textMain: '#FFFFFF',
               textMuted: '#B8C1EC',
             }
@@ -35,21 +33,10 @@
       }
     </script>
     <style>
-      /* Custom Scrollbar */
-      ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #0F1220; 
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #232946; 
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #4DA3FF; 
-      }
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: #0F1220; }
+      ::-webkit-scrollbar-thumb { background: #232946; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #4DA3FF; }
       .glass-panel {
         background: rgba(26, 31, 54, 0.7);
         backdrop-filter: blur(12px);
@@ -59,21 +46,20 @@
   <script type="importmap">
 {
   "imports": {
-    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
-    "react/": "https://esm.sh/react@^19.2.4/",
     "react": "https://esm.sh/react@^19.2.4",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.3",
-    "recharts": "https://esm.sh/recharts@^3.7.0",
+    "react/": "https://esm.sh/react@^19.2.4/",
     "@google/genai": "https://esm.sh/@google/genai@^1.39.0",
-    "vite": "https://esm.sh/vite@^7.3.1"
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+    "recharts": "https://esm.sh/recharts@^3.7.0",
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.3"
   }
 }
 </script>
 </head>
   <body class="bg-background text-textMain antialiased overflow-hidden">
     <div id="root"></div>
-    <!-- Entry point for Vite build -->
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>

@@ -1,13 +1,22 @@
-import { GoogleGenAI, Type, Schema } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import { DriverRecord } from "../types";
 
 // Helper to get Gemini Client (ensure fresh instance for latest API key)
-const getAiClient = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
+const getAiClient = () => {
+  const key = process.env.API_KEY;
+  if (!key) {
+    console.error("CRITICAL: API Key is missing. Please set API_KEY in your environment variables (Vercel/Netlify settings).");
+  } else {
+    // Log for debugging (shows first 4 chars only for security)
+    console.log("Gemini Client Initializing. Key present:", key.substring(0, 4) + "...");
+  }
+  return new GoogleGenAI({ apiKey: key });
+};
 
 // --- ANALYTICS ---
 
 export const analyzeDataPatterns = async (data: DriverRecord[]) => {
-  const summary = JSON.stringify(data.slice(0, 50)); // Analyze top 50 for brevity in demo
+  const summary = JSON.stringify(data.slice(0, 50)); // Analyze top 50 for brevity
   
   const prompt = `
     Analise estes dados de horas extras de motoristas. 
@@ -33,7 +42,7 @@ export const analyzeDataPatterns = async (data: DriverRecord[]) => {
     return response.text;
   } catch (error) {
     console.error("Analysis Error:", error);
-    return "Erro ao analisar dados. Verifique sua chave de API.";
+    return "Erro ao analisar dados. Verifique o console (F12) para detalhes do erro de conexão/chave.";
   }
 };
 
@@ -67,17 +76,15 @@ export const chatWithData = async (
 
     const result = await chat.sendMessage({ message });
     
-    // Check for maps grounding
-    let mapLinks = [];
+    // Check for maps grounding (simple extraction)
     if (result.candidates?.[0]?.groundingMetadata?.groundingChunks) {
-        // Simple extraction for demo purposes
-        // In a real app, you would parse this structure strictly
+        console.log("Maps Grounding Data:", result.candidates[0].groundingMetadata.groundingChunks);
     }
 
     return result.text;
   } catch (error) {
     console.error("Chat Error:", error);
-    return "Desculpe, encontrei um erro ao processar sua solicitação.";
+    return "Desculpe, encontrei um erro de conexão. Verifique se a chave de API está configurada corretamente.";
   }
 };
 
@@ -86,6 +93,7 @@ export const chatWithData = async (
 export const generateImage = async (prompt: string, aspectRatio: string = "16:9") => {
   try {
     // API Key Selection for High-Quality Image Models
+    // This handles the specific requirement for Paid Keys on Veo/Imagen models
     if (typeof window !== 'undefined' && (window as any).aistudio) {
         const aistudio = (window as any).aistudio;
         if (await aistudio.hasSelectedApiKey() === false) {
