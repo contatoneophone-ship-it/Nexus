@@ -65,12 +65,16 @@ const App = () => {
   };
 
   // Handlers for Data Management
+  const handleAddDriver = (newRecord: DriverRecord) => {
+    setData(prev => [newRecord, ...prev]);
+  };
+
   const handleUpdateDriver = (updatedRecord: DriverRecord) => {
     setData(prev => prev.map(item => item.id === updatedRecord.id ? updatedRecord : item));
   };
 
-  const handleDeleteDriver = (id: string) => {
-    if (confirm("Tem certeza que deseja excluir este registro?")) {
+  const handleDeleteDriver = (id: string, skipConfirm: boolean = false) => {
+    if (skipConfirm || confirm("Tem certeza que deseja excluir este registro?")) {
       setData(prev => prev.filter(item => item.id !== id));
     }
   };
@@ -428,6 +432,7 @@ const App = () => {
                  data={data} 
                  onUpdate={handleUpdateDriver} 
                  onDelete={handleDeleteDriver}
+                 onAdd={handleAddDriver}
                  onExport={handleExportCSV}
                  onPrint={handlePrintReport}
                  onClearAll={handleClearAllData}

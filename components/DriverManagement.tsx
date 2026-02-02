@@ -5,18 +5,22 @@ import { Edit2, Trash2, Search, Download, Save, X, FileSpreadsheet, RotateCcw, U
 interface DriverManagementProps {
   data: DriverRecord[];
   onUpdate: (updatedRecord: DriverRecord) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string, skipConfirm?: boolean) => void;
   onExport: () => void;
   onPrint: () => void;
   onClearAll: () => void;
   onRestore: (newData: DriverRecord[]) => void;
-  onAdd?: (newRecord: DriverRecord) => void; // Optional prop if we want to bubble up, but we can handle via parent data prop update logic usually
+  onAdd?: (newRecord: DriverRecord) => void; 
 }
 
-const DriverManagement: React.FC<DriverManagementProps> = ({ data, onUpdate, onDelete, onExport, onPrint, onClearAll, onRestore }) => {
+const DriverManagement: React.FC<DriverManagementProps> = ({ data, onUpdate, onDelete, onExport, onPrint, onClearAll, onRestore, onAdd }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<DriverRecord | null>(null);
+  
+  // Use 'any' to allow strings during editing for better UX (prevents "10." -> 10 jumping)
+  const [editForm, setEditForm] = useState<any>(null);
+  const [isNewRecord, setIsNewRecord] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showColumnSelector, setShowColumnSelector] = useState(false);
 
@@ -45,11 +49,21 @@ const DriverManagement: React.FC<DriverManagementProps> = ({ data, onUpdate, onD
   const handleEditClick = (record: DriverRecord) => {
     setEditingId(record.id);
     setEditForm({ ...record });
+    setIsNewRecord(false);
+  };
+
+  const generateId = () => {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+    return Date.now().toString(36) + Math.random().toString(36).substring(2);
   };
 
   const handleAddNew = () => {
+    setSearchTerm(''); // Clear search to ensure new record is visible
+    const newId = generateId();
     const newRecord: DriverRecord = {
-        id: crypto.randomUUID(),
+        id: newId,
         nome: '',
         adiantamentos: 0,
         diariasMes: 0,
@@ -64,28 +78,54 @@ const DriverManagement: React.FC<DriverManagementProps> = ({ data, onUpdate, onD
         baseSalary: 0,
         referenceDate: new Date().toISOString().slice(0, 7)
     };
-    onRestore([newRecord, ...data]);
-    setEditingId(newRecord.id);
+    
+    if (onAdd) {
+        onAdd(newRecord);
+    } else {
+        onRestore([newRecord, ...data]);
+    }
+
+    setEditingId(newId);
     setEditForm(newRecord);
+    setIsNewRecord(true);
   };
 
   const handleSave = () => {
     if (editForm) {
-      onUpdate(editForm);
+      // Safe conversion back to number
+      const finalRecord: DriverRecord = {
+        ...editForm,
+        adiantamentos: parseFloat(editForm.adiantamentos) || 0,
+        diariasMes: parseFloat(editForm.diariasMes) || 0,
+        deslocamento: parseFloat(editForm.deslocamento) || 0,
+        he50: parseFloat(editForm.he50) || 0,
+        he100: parseFloat(editForm.he100) || 0,
+        adicionalNoturno: parseFloat(editForm.adicionalNoturno) || 0,
+        faltas: parseFloat(editForm.faltas) || 0,
+        baseSalary: parseFloat(editForm.baseSalary) || 0,
+      };
+
+      onUpdate(finalRecord);
       setEditingId(null);
       setEditForm(null);
+      setIsNewRecord(false);
     }
   };
 
   const handleCancel = () => {
+    // If we cancel a "New Record", delete it silently so we don't leave empty rows
+    if (isNewRecord && editingId) {
+        onDelete(editingId, true);
+    }
     setEditingId(null);
     setEditForm(null);
+    setIsNewRecord(false);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, field: keyof DriverRecord) => {
     if (!editForm) return;
-    const val = e.target.type === 'number' ? parseFloat(e.target.value) : e.target.value;
-    setEditForm(prev => prev ? ({ ...prev, [field]: val }) : null);
+    // Store as string to support "10." typing
+    setEditForm(prev => prev ? ({ ...prev, [field]: e.target.value }) : null);
   };
 
   const toggleColumn = (key: keyof typeof visibleColumns) => {
@@ -283,7 +323,7 @@ const DriverManagement: React.FC<DriverManagementProps> = ({ data, onUpdate, onD
                    {editingId === row.id && editForm ? (
                      <>
                         {visibleColumns.referenceDate && <td className="p-2"><input type="month" className="w-full bg-black/30 border border-white/20 rounded p-1 text-white" value={editForm.referenceDate} onChange={e => handleChange(e, 'referenceDate')} /></td>}
-                        {visibleColumns.nome && <td className="p-2"><input className="w-full bg-black/30 border border-white/20 rounded p-1 text-white" value={editForm.nome} onChange={e => handleChange(e, 'nome')} /></td>}
+                        {visibleColumns.nome && <td className="p-2"><input className="w-full bg-black/30 border border-white/20 rounded p-1 text-white" value={editForm.nome} onChange={e => handleChange(e, 'nome')} autoFocus /></td>}
                         {visibleColumns.filial && <td className="p-2"><input className="w-full bg-black/30 border border-white/20 rounded p-1 text-white" value={editForm.filial} onChange={e => handleChange(e, 'filial')} /></td>}
                         {visibleColumns.baseSalary && <td className="p-2"><input type="number" step="0.01" className="w-full bg-black/30 border border-white/20 rounded p-1 text-white font-bold" value={editForm.baseSalary} onChange={e => handleChange(e, 'baseSalary')} /></td>}
                         {visibleColumns.cpf && <td className="p-2"><input className="w-full bg-black/30 border border-white/20 rounded p-1 text-white" value={editForm.cpf} onChange={e => handleChange(e, 'cpf')} /></td>}

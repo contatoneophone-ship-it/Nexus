@@ -1,8 +1,8 @@
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { DriverRecord } from "../types";
 
-// Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Helper to get Gemini Client (ensure fresh instance for latest API key)
+const getAiClient = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 // --- ANALYTICS ---
 
@@ -22,6 +22,7 @@ export const analyzeDataPatterns = async (data: DriverRecord[]) => {
   `;
 
   try {
+    const ai = getAiClient();
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt,
@@ -57,6 +58,7 @@ export const chatWithData = async (
       config.tools = [{ googleMaps: {} }];
     }
 
+    const ai = getAiClient();
     const chat = ai.chats.create({
       model: modelName,
       config: config,
@@ -83,6 +85,15 @@ export const chatWithData = async (
 
 export const generateImage = async (prompt: string, aspectRatio: string = "16:9") => {
   try {
+    // API Key Selection for High-Quality Image Models
+    if (typeof window !== 'undefined' && (window as any).aistudio) {
+        const aistudio = (window as any).aistudio;
+        if (await aistudio.hasSelectedApiKey() === false) {
+             await aistudio.openSelectKey();
+        }
+    }
+
+    const ai = getAiClient();
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-image-preview',
       contents: prompt,
@@ -113,6 +124,7 @@ export const editImage = async (base64Image: string, prompt: string) => {
     // Remove header if present
     const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|jpg);base64,/, "");
 
+    const ai = getAiClient();
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: {
